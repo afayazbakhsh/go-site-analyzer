@@ -1,14 +1,26 @@
 package httpserver
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(r *gin.Engine) {
+
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Hello, Gin is running!",
 		})
 	})
+
+	api := r.Group("/api/v1")
+	{
+		api.GET("/check", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "pong",
+			})
+		})
+	}
+
 }
