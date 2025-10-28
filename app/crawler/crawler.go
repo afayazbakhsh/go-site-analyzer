@@ -1,9 +1,24 @@
 package crawler
 
-func Run() map[string]string {
-	// You could fetch pages, parse them, etc.
-	return map[string]string{
-		"url":   "https://example.com",
-		"title": "Example Page",
+import (
+	"time"
+)
+
+func Crawl(url string) map[string]any {
+
+	result := Fetch(url, 10*time.Second)
+
+	if result.Err != nil {
+		return map[string]any{
+			"url":   url,
+			"error": result.Err.Error(),
+		}
+	}
+
+	return map[string]any{
+		"url":        url,
+		"status":     result.StatusCode,
+		"load_time":  result.Duration.Seconds(),
+		"body_bytes": len(result.Body),
 	}
 }
