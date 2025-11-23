@@ -1,7 +1,9 @@
 package crawler
 
 import (
+	"context"
 	"io"
+	"net"
 	"net/http"
 	"time"
 )
@@ -14,28 +16,46 @@ type FetchResult struct {
 	Err        error
 }
 
-// Fetch fetches a URL and measures how long it takes
-func Fetch(url string, timeout time.Duration) FetchResult {
+func Fetch(url string) FetchResult {
 	start := time.Now()
 
-	client := http.Client{Timeout: timeout}
-	response, err := client.Get(url)
+	// Dial + TLS timeout
+	dialer := &net.Dialer{
+		Timeout: 5 * time.Second,
+	}
 
+	transport := &http.Transport{
+		DialContext:         dialer.DialContext,
+		TLSHandshakeTimeout: 5 * time.Second,
+	}
+
+	client := &http.Client{
+		Transport: transport,
+	}
+
+	// Whole request timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return FetchResult{Err: err}
 	}
 
-	defer response.Body.Close()
+	resp, err := client.Do(req)
+	if err != nil {
+		return FetchResult{Err: err}
+	}
+	defer resp.Body.Close()
 
-	body, err := io.ReadAll(response.Body)
-
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return FetchResult{Err: err}
 	}
 
 	return FetchResult{
 		Body:       body,
-		StatusCode: response.StatusCode,
+		StatusCode: resp.StatusCode,
 		Duration:   time.Since(start),
 		Err:        nil,
 	}

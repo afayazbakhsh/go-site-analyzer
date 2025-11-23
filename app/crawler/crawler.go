@@ -1,12 +1,8 @@
 package crawler
 
-import (
-	"time"
-)
-
 func Crawl(url string) map[string]any {
 
-	result := Fetch(url, 10*time.Second)
+	result := Fetch(url)
 
 	if result.Err != nil {
 		return map[string]any{
