@@ -1,8 +1,9 @@
 package httpserver
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(r *gin.Engine) {
@@ -17,5 +18,4 @@ func RegisterRoutes(r *gin.Engine) {
 	{
 		api.GET("/check", CheckHandler) // call handler in handler.go
 	}
-
 }

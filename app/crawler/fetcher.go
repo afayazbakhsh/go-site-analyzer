@@ -46,9 +46,12 @@ func Fetch(url string) FetchResult {
 	if err != nil {
 		return FetchResult{Err: err}
 	}
+
 	defer resp.Body.Close()
 
+	// read body
 	body, err := io.ReadAll(resp.Body)
+
 	if err != nil {
 		return FetchResult{Err: err}
 	}
