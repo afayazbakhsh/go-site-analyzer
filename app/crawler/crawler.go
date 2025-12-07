@@ -1,7 +1,6 @@
 package crawler
 
 func Crawl(url string) map[string]any {
-
 	result := Fetch(url)
 
 	if result.Err != nil {
@@ -11,10 +10,13 @@ func Crawl(url string) map[string]any {
 		}
 	}
 
+	parsed := ParseHTML(result.Body, url)
+
 	return map[string]any{
 		"url":        url,
 		"status":     result.StatusCode,
 		"load_time":  result.Duration.Seconds(),
 		"body_bytes": len(result.Body),
+		"parsed":     parsed,
 	}
 }
