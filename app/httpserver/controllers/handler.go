@@ -1,9 +1,10 @@
-package httpserver
+package controllers
 
 import (
-	"github.com/gin-gonic/gin"
 	"gocrawler/app/crawler"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func CheckHandler(c *gin.Context) {

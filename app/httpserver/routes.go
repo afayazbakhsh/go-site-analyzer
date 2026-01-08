@@ -21,7 +21,10 @@ func RegisterRoutes(route *gin.Engine) {
 
 		api.Group("page-data/")
 		{
-			api.POST("create", controllers.CreatePageData)
+			api.GET("index", controllers.Index)
+			api.POST("create", controllers.Create)
+			api.PUT("update", controllers.Update)
+			api.DELETE("delete", controllers.Delete)
 		}
 	}
 }

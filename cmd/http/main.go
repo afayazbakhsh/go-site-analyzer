@@ -19,7 +19,7 @@ func main() {
 	log.Println("DB connected successfully")
 
 	// 2️⃣ Start HTTP server
-	if err := httpserver.Run(":8080"); err != nil {
+	if err := httpserver.Run(":8282"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
