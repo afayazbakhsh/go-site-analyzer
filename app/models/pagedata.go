@@ -1,18 +1,27 @@
 package models
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 type PageLinks struct {
-	Internal int
-	External int
+	Internal int `json:"internal"`
+	External int `json:"external"`
 }
 
 type PageData struct {
-	ID          uint `gorm:"primaryKey"`
-	URL         string
-	Title       string
-	Description string
-	WordCount   int
-	Links       PageLinks `gorm:"embedded"`
-	StatusCode  int
-	LoadTime    float64
-	Language    string
+	ID          uint           `json:"id" gorm:"primaryKey;autoIncrement"`
+	URL         string         `json:"url" gorm:"size:1000;not null;uniqueIndex"`
+	Title       string         `json:"title" gorm:"size:255"`
+	Description string         `json:"description" gorm:"size:5000"`
+	WordCount   int            `json:"word_count" gorm:"default:0"`
+	Links       PageLinks      `json:"links" gorm:"embedded"`
+	StatusCode  int            `json:"status_code" gorm:"index:idx_status_code"`
+	LoadTime    float64        `json:"load_time" gorm:"type:double precision;default:0"`
+	Language    string         `json:"language" gorm:"size:50;index:idx_language"`
+	CreatedAt   time.Time      `json:"created_at" gorm:"index:idx_created_at,sort:desc"`
+	UpdatedAt   time.Time      `json:"updated_at" gorm:"index:idx_updated_at,sort:desc"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 }

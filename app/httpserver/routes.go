@@ -10,21 +10,34 @@ import (
 func RegisterRoutes(route *gin.Engine) {
 
 	route.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello, Gin is running!",
-		})
+		c.String(http.StatusOK, "Hello, Gin is running!")
 	})
 
 	api := route.Group("/api/v1/")
 	{
 		api.GET("check", controllers.CheckHandler) // call handler in handler.go
 
-		api.Group("page-data/")
+		pagedata := api.Group("page-data/", adminAuthMiddlewares())
 		{
-			api.GET("index", controllers.Index)
-			api.POST("create", controllers.Create)
-			api.PUT("update", controllers.Update)
-			api.DELETE("delete", controllers.Delete)
+			pagedata.GET("index", controllers.Index)
+			pagedata.GET(":id/show", controllers.Show)
+			pagedata.POST("create", controllers.Create)
+			pagedata.PUT("update", controllers.Update)
+			pagedata.DELETE("delete", controllers.Delete)
 		}
+	}
+}
+
+func adminAuthMiddlewares() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// token := c.GetHeader("Authorization")
+
+		// if token != "secret-token" {
+		// 	c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
+		// 	return
+		// }
+
+		c.Next()
 	}
 }
