@@ -2,19 +2,27 @@ package crawler
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-func ParseHTML(body []byte, baseURL string) map[string]any {
+type ParsedHtml struct {
+	Title           string   `json:"title"`
+	MetaDescription string   `json:"meta_description"`
+	WordCount       int      `json:"word_count"`
+	LinksCount      int      `json:"links_count"`
+	InternalLinks   []string `json:"internal_links"`
+	ExternalLinks   []string `json:"external_links"`
+}
+
+func ParseHTML(body []byte, baseURL string) (*ParsedHtml, error) {
 
 	reader := bytes.NewReader(body)
 	doc, err := goquery.NewDocumentFromReader(reader)
 
 	if err != nil {
-		return map[string]any{"error": err.Error()}
+		return nil, err
 	}
 
 	title := doc.Find("title").Text()
@@ -24,27 +32,37 @@ func ParseHTML(body []byte, baseURL string) map[string]any {
 	words := strings.Fields(text)
 	wordCount := len(words)
 
-	links := extractLinks(doc)
+	internalLinks, externalLinks := extractLinks(doc, baseURL)
 
-	return map[string]any{
-		"title":            title,
-		"meta_description": desc,
-		"word_count":       wordCount,
-		"links_count":      len(links),
-	}
+	linksCount := len(internalLinks) + len(externalLinks)
+
+	return &ParsedHtml{
+		Title:           title,
+		MetaDescription: desc,
+		WordCount:       wordCount,
+		LinksCount:      linksCount,
+		InternalLinks:   internalLinks,
+		ExternalLinks:   externalLinks,
+	}, nil
 }
 
-func extractLinks(doc *goquery.Document) []string {
-	links := make([]string, 0)
+func extractLinks(doc *goquery.Document, baseURL string) ([]string, []string) {
+
+	internalLinks := make([]string, 0)
+	externalLinks := make([]string, 0)
 
 	doc.Find("a").Each(func(i int, s *goquery.Selection) {
-		href, exists := s.Attr("href")
-		if exists {
-			fmt.Println("Extracting links...", href)
 
-			links = append(links, href)
+		href, exists := s.Attr("href")
+
+		if exists {
+			if strings.Contains(href, baseURL) {
+				internalLinks = append(internalLinks, href)
+			} else if len(href) > 10 {
+				externalLinks = append(externalLinks, href)
+			}
 		}
 	})
 
-	return links
+	return internalLinks, externalLinks
 }

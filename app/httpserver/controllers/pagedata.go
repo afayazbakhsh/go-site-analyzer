@@ -16,7 +16,7 @@ func Index(c *gin.Context) {
 
 	request := requests.PageDataIndexRequest{}
 
- 	if err := c.ShouldBind(&request); err != nil {
+	if err := c.ShouldBind(&request); err != nil {
 		c.JSON(422, gin.H{"errors": err.Error()})
 
 		return
@@ -68,7 +68,7 @@ func Create(c *gin.Context) {
 
 	var request requests.PageDataCreateRequest
 
-	if err := c.BindJSON(&request); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

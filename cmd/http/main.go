@@ -3,6 +3,7 @@ package main
 import (
 	"gocrawler/app/db"
 	"gocrawler/app/httpserver"
+	"gocrawler/app/httpserver/controllers"
 	"gocrawler/app/httpserver/requests"
 	"log"
 
@@ -19,6 +20,8 @@ func main() {
 	}
 
 	db.Migrate()
+
+	controllers.CheckMainPagesData()
 
 	log.Println("DB connected successfully")
 

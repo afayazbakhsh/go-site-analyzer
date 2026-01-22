@@ -19,9 +19,8 @@ type PageData struct {
 	WordCount   int            `json:"word_count" gorm:"default:0"`
 	Links       PageLinks      `json:"links" gorm:"embedded"`
 	StatusCode  int            `json:"status_code" gorm:"index:idx_status_code"`
-	LoadTime    float64        `json:"load_time" gorm:"type:double precision;default:0"`
-	Language    string         `json:"language" gorm:"size:50;index:idx_language"`
-	CreatedAt   time.Time      `json:"created_at" gorm:"index:idx_created_at,sort:desc"`
-	UpdatedAt   time.Time      `json:"updated_at" gorm:"index:idx_updated_at,sort:desc"`
+	LoadTime    int64          `json:"load_time" gorm:"type:double precision;default:0"`
+	CreatedAt   time.Time      `json:"created_at" gorm:"index:idx_created_at,sort:desc,autoCreateTime"`
+	UpdatedAt   time.Time      `json:"updated_at" gorm:"index:idx_updated_at,sort:desc,autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 }
