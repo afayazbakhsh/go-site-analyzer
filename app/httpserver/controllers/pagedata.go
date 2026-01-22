@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"gocrawler/app/db"
 	"gocrawler/app/httpserver/requests"
 	"gocrawler/app/httpserver/response"
 	"gocrawler/app/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -15,6 +17,9 @@ import (
 func Index(c *gin.Context) {
 
 	request := requests.PageDataIndexRequest{}
+
+	var page int
+	var perPage int
 
 	if err := c.ShouldBind(&request); err != nil {
 		c.JSON(422, gin.H{"errors": err.Error()})
@@ -33,12 +38,25 @@ func Index(c *gin.Context) {
 		baseQuery.Where("url", request.URL)
 	}
 
+	if p, err := strconv.Atoi(c.DefaultQuery("page", "1")); err == nil && p > 0 {
+		page = p
+	}
+
+	if pp, err := strconv.Atoi(c.DefaultQuery("per_page", "10")); err == nil && pp > 0 {
+		perPage = pp
+	}
+
+	baseQuery = db.Pagination(baseQuery, page, perPage) // pagination applied here
+
+	sqlQuery := baseQuery.Statement.SQL.String() // Get the SQL query string
+	fmt.Println("SQL Query:", sqlQuery)
+
 	var lists []response.PageDataIndexResponse
 
 	result := baseQuery.Find(&lists)
 
 	if result.Error != nil {
-
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve data"})
 	}
 
 	c.JSON(http.StatusOK, lists)

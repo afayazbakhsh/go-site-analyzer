@@ -3,9 +3,7 @@ package controllers
 import (
 	"fmt"
 	"gocrawler/app/crawler"
-	"gocrawler/app/db"
 	"gocrawler/app/httpserver/requests"
-	"gocrawler/app/models"
 	"net/http"
 	"sync"
 

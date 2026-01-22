@@ -40,7 +40,6 @@ func Init() error {
 		dbname = "gocrawler"
 	}
 
-	// Use Sprintf for clarity and safety
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		host, user, password, dbname, port,
@@ -67,4 +66,11 @@ func Init() error {
 	log.Println("✅ Database connection established successfully")
 
 	return nil
+}
+
+func Pagination(dbQuery *gorm.DB, page int, perPage int) *gorm.DB {
+
+	offset := (page - 1) * perPage
+
+	return dbQuery.Limit(perPage).Offset(offset)
 }
