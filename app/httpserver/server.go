@@ -14,7 +14,7 @@ func Run(addr string) error {
 
 	r.Use(adminAuthMiddlewares())
 
-	RegisterRoutes(r) // جنریت کردن روت های برنامه
+	RegisterRoutes(r)
 
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(404, gin.H{"message": "route not found"})
@@ -24,5 +24,5 @@ func Run(addr string) error {
 		c.JSON(405, gin.H{"message": "method not allowed"})
 	})
 
-	return r.Run(addr) // راه اندازی روی پورت مورد نظر
+	return r.Run(addr)
 }
