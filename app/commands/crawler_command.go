@@ -3,19 +3,28 @@ package commands
 import (
 	"fmt"
 	"gocrawler/app/crawler"
+	"strconv"
 	"sync"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-var helloCmd = &cobra.Command{
+var crawlerCmd = &cobra.Command{
 	Use:   "crawler",
 	Short: "Print hello message",
+	Run:   handle,
+}
 
-	Run: handle,
+func init() {
+	rootCmd.AddCommand(crawlerCmd)
+	crawlerCmd.Flags().Int("max-worker", 0, "max worker")
 }
 
 func handle(cmd *cobra.Command, args []string) {
+
+	var maxWorker int
+
 	URLs := []string{
 		"https://x.com/",
 		"https://dojinja.com/",
@@ -23,8 +32,27 @@ func handle(cmd *cobra.Command, args []string) {
 		"http://qamarnews.com/",
 	}
 
-	maxWorker := 2
+	maxWorkerFlag := cmd.Flag("max-worker")
+
+	if maxWorkerFlag != nil && maxWorkerFlag.Changed {
+		
+		v, err := strconv.Atoi(maxWorkerFlag.Value.String())
+		if err != nil {
+			fmt.Println("Invalid max-worker flag:", err)
+			return
+		}
+
+		fmt.Println("Read from flags:", v)
+
+		maxWorker = v
+
+	} else {
+
+		maxWorker = viper.GetInt("crawler.maxWorker")
+	}
+
 	bufferChannel := make(chan struct{}, maxWorker)
+
 	var wg sync.WaitGroup
 
 	for _, u := range URLs {
@@ -38,7 +66,7 @@ func handle(cmd *cobra.Command, args []string) {
 			defer func() { <-bufferChannel }()
 
 			result, err := crawler.Read(url)
-			
+
 			if err != nil {
 				fmt.Println("❌ Error:", err)
 				return
@@ -58,8 +86,4 @@ func handle(cmd *cobra.Command, args []string) {
 	wg.Wait()
 
 	fmt.Println("All done!")
-}
-
-func init() {
-	rootCmd.AddCommand(helloCmd)
 }
