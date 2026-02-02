@@ -12,6 +12,15 @@ import (
 	"gorm.io/gorm"
 )
 
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout: 5 * time.Second,
+		}).DialContext,
+		TLSHandshakeTimeout: 5 * time.Second,
+	},
+}
+
 type FetchResult struct {
 	Body       []byte
 	StatusCode int
@@ -35,9 +44,9 @@ type ReadPage struct {
 	LoadTime    int64  `json:"load_time"`
 }
 
-func Read(url string) (_ *ReadPage, err error) {
+func Read(ctx context.Context, url string) (_ *ReadPage, err error) {
 
-	result := Fetch(url) // step 1: request and fetch data
+	result := Fetch(ctx, url) // step 1: request and fetch data
 
 	if result.Err != nil {
 		return nil, result.Err
@@ -112,25 +121,12 @@ func Write(readData *ReadPage) (*models.PageData, error) {
 	return &pageData, nil
 }
 
-func Fetch(url string) FetchResult {
+func Fetch(ctx context.Context, url string) FetchResult {
 
 	start := time.Now()
-	// Dial + TLS timeout
-	dialer := &net.Dialer{
-		Timeout: 5 * time.Second,
-	}
-
-	transport := &http.Transport{
-		DialContext:         dialer.DialContext,
-		TLSHandshakeTimeout: 5 * time.Second,
-	}
-
-	client := &http.Client{
-		Transport: transport,
-	}
 
 	// Whole request timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -138,7 +134,7 @@ func Fetch(url string) FetchResult {
 		return FetchResult{Err: err}
 	}
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return FetchResult{Err: err}
 	}

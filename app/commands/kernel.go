@@ -26,11 +26,11 @@ func initConfig() {
 
 	viper.SetConfigName("config") // config.yaml
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".") // directory of kernel (here)
+	viper.AddConfigPath("../../") // directory of kernel (here)
 	viper.SetDefault("crawler.maxWorker", 2)
 
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("⚠️ No config file found, using defaults")
+		fmt.Println("⚠️ No config file found, using defaults", err)
 	} else {
 		fmt.Println("✅ Using config file:", viper.ConfigFileUsed())
 	}

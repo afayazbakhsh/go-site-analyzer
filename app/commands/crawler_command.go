@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"gocrawler/app/crawler"
 	"strconv"
@@ -25,6 +26,9 @@ func handle(cmd *cobra.Command, args []string) {
 
 	var maxWorker int
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	URLs := []string{
 		"https://x.com/",
 		"https://dojinja.com/",
@@ -35,7 +39,7 @@ func handle(cmd *cobra.Command, args []string) {
 	maxWorkerFlag := cmd.Flag("max-worker")
 
 	if maxWorkerFlag != nil && maxWorkerFlag.Changed {
-		
+
 		v, err := strconv.Atoi(maxWorkerFlag.Value.String())
 		if err != nil {
 			fmt.Println("Invalid max-worker flag:", err)
@@ -60,27 +64,33 @@ func handle(cmd *cobra.Command, args []string) {
 		bufferChannel <- struct{}{}
 		wg.Add(1)
 
-		go func(url string) {
+		go func(ctx context.Context, url string) {
 
 			defer wg.Done()
 			defer func() { <-bufferChannel }()
 
-			result, err := crawler.Read(url)
-
-			if err != nil {
-				fmt.Println("❌ Error:", err)
+			select {
+			case <-ctx.Done():
+				fmt.Println("⚠️ Context canceled before start:", url)
 				return
-			}
+			default:
+				result, err := crawler.Read(ctx, url)
 
-			fmt.Println("====================================")
-			fmt.Println("🌐 URL       :", result.URL)
-			fmt.Println("📄 Title     :", result.Title)
-			fmt.Println("📝 WordCount :", result.WordCount)
-			fmt.Println("🔗 Links    :", result.LinksCount)
-			fmt.Println("🛠 Status   :", result.StatusCode)
-			fmt.Println("⏱ LoadTime :", result.LoadTime, "ms")
-			fmt.Println("====================================\n")
-		}(u)
+				if err != nil {
+					fmt.Println("❌ Error:", err)
+					return
+				}
+
+				fmt.Println("====================================")
+				fmt.Println("🌐 URL       :", result.URL)
+				fmt.Println("📄 Title     :", result.Title)
+				fmt.Println("📝 WordCount :", result.WordCount)
+				fmt.Println("🔗 Links    :", result.LinksCount)
+				fmt.Println("🛠 Status   :", result.StatusCode)
+				fmt.Println("⏱ LoadTime :", result.LoadTime, "ms")
+				fmt.Println("====================================\n")
+			}
+		}(ctx, u)
 	}
 
 	wg.Wait()

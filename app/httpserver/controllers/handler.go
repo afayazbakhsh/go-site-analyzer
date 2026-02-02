@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"gocrawler/app/crawler"
 	"gocrawler/app/httpserver/requests"
 	"net/http"
@@ -17,7 +18,10 @@ func CheckHandler(c *gin.Context) {
 		return
 	}
 
-	readResult, err := crawler.Read(*requests.Url)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	readResult, err := crawler.Read(ctx, *requests.Url)
 
 	if err != nil {
 		c.JSON(500, gin.H{"message": "Failed to read Data", "error": err})
