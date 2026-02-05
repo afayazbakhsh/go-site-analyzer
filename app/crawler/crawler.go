@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"errors"
 	"gocrawler/app/db"
 	"gocrawler/app/models"
 	"io"
@@ -9,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var httpClient = &http.Client{
@@ -73,49 +74,39 @@ func Read(ctx context.Context, url string) (_ *ReadPage, err error) {
 	}, nil
 }
 
-func Write(readData *ReadPage) (*models.PageData, error) {
+func Write(ctx context.Context, readData *ReadPage) (*models.PageData, error) {
 
 	var pageData models.PageData
 
-	if err := db.DB.Where("url", readData.URL).First(&pageData).Error; err != nil {
+	if readData == nil {
+		return nil, errors.New("readData is nil")
+	}
 
-		if err != gorm.ErrRecordNotFound {
-			return nil, err
-		}
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
-		pageData = models.PageData{
-			URL:         readData.URL,
-			Title:       readData.Title,
-			Description: readData.Description,
-			WordCount:   readData.WordCount,
-			Links: models.PageLinks{
-				Internal: len(readData.Links.Internal),
-				External: len(readData.Links.External),
-			},
-			StatusCode: readData.StatusCode,
-			LoadTime:   readData.LoadTime,
-		}
-
-		if err := db.DB.Create(&pageData).Error; err != nil {
-			return nil, err
-		}
-
-	} else {
-
-		pageData.Title = readData.Title
-		pageData.Description = readData.Description
-		pageData.WordCount = readData.WordCount
-		pageData.Links = models.PageLinks{
+	pageData = models.PageData{
+		URL:         readData.URL,
+		Title:       readData.Title,
+		Description: readData.Description,
+		WordCount:   readData.WordCount,
+		Links: models.PageLinks{
 			Internal: len(readData.Links.Internal),
 			External: len(readData.Links.External),
-		}
-		pageData.StatusCode = readData.StatusCode
-		pageData.LoadTime = readData.LoadTime
-		pageData.UpdatedAt = time.Now()
+		},
+		StatusCode: readData.StatusCode,
+		LoadTime:   readData.LoadTime,
+	}
 
-		if err := db.DB.Where("url", readData.URL).Save(&pageData).Error; err != nil {
-			return nil, err
-		}
+	err := db.DB.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "url"}},
+			UpdateAll: true,
+		}).
+		Create(&pageData).Error
+
+	if err != nil {
+		return nil, err
 	}
 
 	return &pageData, nil

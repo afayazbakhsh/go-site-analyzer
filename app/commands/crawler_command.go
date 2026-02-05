@@ -47,13 +47,13 @@ func handle(cmd *cobra.Command, args []string) {
 				fmt.Println("⚠️ Context canceled before start db")
 				return
 
-			case id, ok := <-resultChan:
+			case data, ok := <-resultChan:
 				if !ok {
-					fmt.Println("✅ DB writer finished:", id)
+					fmt.Println("✅ DB writer finished:", data)
 					return
 				}
 
-				if err, pageData := crawler.Write(id); err != nil {
+				if err, pageData := crawler.Write(ctx, data); err != nil {
 					fmt.Println("Failed to write:", err)
 					return
 				} else {
