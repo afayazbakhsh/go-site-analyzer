@@ -37,10 +37,13 @@ func handle(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	var wg sync.WaitGroup
+	var dbWg sync.WaitGroup
 	bufferChannel := make(chan struct{}, setMaxWorker(cmd))
 	resultChan := make(chan *crawler.ReadPage, 50)
 
+	dbWg.Add(1)
 	go func() {
+		defer dbWg.Done()
 		for {
 			select {
 			case <-ctx.Done():
@@ -49,18 +52,18 @@ func handle(cmd *cobra.Command, args []string) {
 
 			case data, ok := <-resultChan:
 				if !ok {
-					fmt.Println("✅ DB writer finished:", data)
+					fmt.Println("✅ DB writer finished")
 					return
 				}
 
-				if err, pageData := crawler.Write(ctx, data); err != nil {
+				if pageData, err := crawler.Write(ctx, data); err != nil {
 					fmt.Println("Failed to write:", err)
 					return
 				} else {
-					fmt.Println("Success to write:", pageData)
+					fmt.Println("Success to write:", pageData.URL)
 				}
 
-			case <-time.After(5 * time.Second):
+			case <-time.After(10 * time.Second):
 				fmt.Println("waiting for results..")
 			}
 		}
@@ -85,6 +88,11 @@ func handle(cmd *cobra.Command, args []string) {
 			default:
 
 				result, err := crawler.Read(ctx, url)
+
+				if err != nil {
+					fmt.Println("❌ Error:", err)
+					return
+				}
 				resultChan <- result
 				if err != nil {
 					fmt.Println("❌ Error:", err)
@@ -97,6 +105,8 @@ func handle(cmd *cobra.Command, args []string) {
 	}
 
 	wg.Wait()
+	close(resultChan)
+	dbWg.Wait()
 
 	fmt.Println("All done!")
 }

@@ -28,7 +28,7 @@ func CheckHandler(c *gin.Context) {
 		return
 	}
 
-	writeResult, err := crawler.Write(readResult)
+	writeResult, err := crawler.Write(ctx, readResult)
 
 	if err != nil {
 		c.JSON(500, gin.H{"message": "failed to write crawl result", "error": err})
