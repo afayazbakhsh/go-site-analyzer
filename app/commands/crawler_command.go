@@ -15,7 +15,7 @@ import (
 var crawlerCmd = &cobra.Command{
 	Use:   "crawler",
 	Short: "Crawl the urls",
-	Run:   handle,
+	Run:   do_crawl,
 }
 
 var URLs = []string{
@@ -32,7 +32,7 @@ func init() {
 	crawlerCmd.Flags().Int("max-worker", 0, "max worker")
 }
 
-func handle(cmd *cobra.Command, args []string) {
+func do_crawl(cmd *cobra.Command, args []string) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
