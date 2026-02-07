@@ -93,12 +93,8 @@ func handle(cmd *cobra.Command, args []string) {
 					fmt.Println("❌ Error:", err)
 					return
 				}
-				resultChan <- result
-				if err != nil {
-					fmt.Println("❌ Error:", err)
-					return
-				}
 
+				resultChan <- result
 				printResult(result)
 			}
 		}(ctx, u)
